@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>救護義消活動看板</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <h1>🚑 救護義消活動看板</h1>
+    <div class="admin-toggle">
+      <button id="openAdmin">幹部管理</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="board">
+      <div class="calendar-wrap">
+        <iframe id="calendarFrame"
+          src="https://calendar.google.com/calendar/embed?src=1b934187b542a739c0faed74834f8175288bb33c0d1ca25f5b4a5cf1104c728d%40group.calendar.google.com&ctz=Asia%2FTaipei"
+          frameborder="0" scrolling="no"></iframe>
+      </div>
+
+      <div class="events-wrap">
+        <div class="toolbar">
+          <input id="q" placeholder="搜尋活動（標題/地點）"/>
+          <button id="reloadBtn">重新載入</button>
+        </div>
+        <div id="eventsList" class="events"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 報名 Modal -->
+  <dialog id="signupDlg">
+    <form method="dialog" id="signupForm">
+      <h3>活動報名</h3>
+      <p id="signupEventTitle" class="muted"></p>
+      <label>分隊 <input name="division" required></label>
+      <label>姓名 <input name="name" required></label>
+      <label>人數 <input name="count" type="number" min="1" step="1" value="1" required></label>
+      <menu>
+        <button value="cancel">取消</button>
+        <button id="signupSubmit" value="default">送出</button>
+      </menu>
+    </form>
+    <p id="signupResult" class="result"></p>
+  </dialog>
+
+  <!-- 取消 Modal -->
+  <dialog id="cancelDlg">
+    <form method="dialog" id="cancelForm">
+      <h3>取消報名</h3>
+      <p id="cancelEventTitle" class="muted"></p>
+      <label>取消原因 <input name="reason" required></label>
+      <menu>
+        <button value="cancel">關閉</button>
+        <button id="cancelSubmit" value="default">確認取消</button>
+      </menu>
+    </form>
+    <p id="cancelResult" class="result"></p>
+  </dialog>
+
+  <!-- 幹部後台（簡易） -->
+  <dialog id="adminDlg">
+    <form method="dialog" id="adminForm">
+      <h3>幹部管理（新增/修改/刪除活動）</h3>
+      <label>管理密鑰 <input name="admin_key" type="password" required></label>
+      <label>動作
+        <select name="action" required>
+          <option value="create_event">新增活動</option>
+          <option value="update_event">修改活動</option>
+          <option value="delete_event">刪除活動(軟刪除)</option>
+        </select>
+      </label>
+      <label>活動ID（修改/刪除必填）<input name="id"></label>
+      <label>標題 <input name="title"></label>
+      <label>日期 <input name="date" type="date"></label>
+      <label>開始時間 <input name="start_time" type="time"></label>
+      <label>結束時間 <input name="end_time" type="time"></label>
+      <label>地點 <input name="location"></label>
+      <label>說明 <input name="description"></label>
+      <label>相簿嵌入連結 <input name="album_url" placeholder="Google Photos/Drive/Imgur 等分享連結"></label>
+      <label>上架（true/false）<input name="is_active" placeholder="true"></label>
+      <menu>
+        <button value="cancel">關閉</button>
+        <button id="adminSubmit" value="default">送出</button>
+      </menu>
+    </form>
+    <p class="muted">提醒：新增活動時會自動產生 ID；若已設定 CALENDAR_ID，系統會建立日曆事件。</p>
+    <p id="adminResult" class="result"></p>
+  </dialog>
+
+  <footer class="foot">
+    <small>Made for EMT volunteers • 單頁式 • 免登入報名</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
