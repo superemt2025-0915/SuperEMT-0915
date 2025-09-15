@@ -1,5 +1,5 @@
 // 把下面換成你的 Apps Script Web App /exec URL
-const API_BASE = 'AKfycbyh7XZ1UJebZZaJG9AWne_CstpzyxQJ7JMA6EyrKeKkZ_k2DrZW3GcPztz-ZwW_fxSKOw/exec';
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyh7XZ1UJebZZaJG9AWne_CstpzyxQJ7JMA6EyrKeKkZ_k2DrZW3GcPztz-ZwW_fxSKOw/exec';
 
 const state = { events: [], mySignups: loadLocalSignups() };
 
