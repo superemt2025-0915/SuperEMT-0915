@@ -3,29 +3,68 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>救護義消活動看板</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <title>救護義消活動看板（免後端互動版）</title>
+  <style>
+    :root{
+      --ems-red:#d7263d; --ems-blue:#1b3b6f; --bg:#f7f8fb; --text:#1a1a1a;
+      --muted:#6b7280; --card:#fff; --chip:#eef2ff; --ok:#166534;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans TC",Segoe UI,Roboto,Arial}
+    .topbar{position:sticky;top:0;z-index:10;display:flex;gap:8px;align-items:center;justify-content:space-between;
+      padding:12px 16px;background:linear-gradient(90deg,var(--ems-blue),var(--ems-red));color:#fff}
+    .topbar h1{margin:0;font-size:18px}
+    .topbar button{background:#fff;color:var(--ems-blue);border:none;border-radius:6px;padding:8px 12px;cursor:pointer}
+    .container{max-width:1200px;margin:16px auto;padding:0 12px}
+    .board{display:grid;grid-template-columns:1.2fr 1.8fr;gap:16px}
+    .calendar-wrap iframe{width:100%;min-height:600px;border:0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+    .events-wrap .toolbar{display:flex;gap:8px;margin-bottom:8px}
+    .toolbar input{flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px}
+    .events{display:grid;gap:12px}
+    .event{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+    .event h3{margin:0 0 6px 0}
+    .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+    .chip{background:var(--chip);padding:4px 8px;border-radius:999px;font-size:12px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    button.primary{background:var(--ems-red);color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer}
+    button.secondary{background:var(--ems-blue);color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer}
+    button.ghost{background:#fff;color:var(--ems-blue);border:1px solid var(--ems-blue);border-radius:8px;padding:8px 12px;cursor:pointer}
+    .album{margin-top:10px;overflow:hidden;border-radius:10px;border:1px solid #e5e7eb}
+    .album iframe{width:100%;height:320px;border:0}
+    .muted{color:var(--muted);font-size:12px}
+    dialog{border:none;border-radius:12px;padding:16px;max-width:520px;width:92%}
+    dialog form{display:grid;gap:8px}
+    dialog label{display:grid;gap:4px;font-size:14px}
+    dialog menu{display:flex;justify-content:flex-end;gap:8px;margin:8px 0 0 0;padding:0}
+    .foot{padding:24px 0;text-align:center;color:var(--muted)}
+    @media (max-width:980px){
+      .board{grid-template-columns:1fr}
+      .calendar-wrap iframe{min-height:520px}
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
     <h1>🚑 救護義消活動看板</h1>
-    <div class="admin-toggle">
+    <div class="right">
       <button id="openAdmin">幹部管理</button>
     </div>
   </header>
 
   <main class="container">
     <section class="board">
+      <!-- 左：Google 日曆（你的公開嵌入網址） -->
       <div class="calendar-wrap">
-        <iframe id="calendarFrame"
+        <iframe
           src="https://calendar.google.com/calendar/embed?src=1b934187b542a739c0faed74834f8175288bb33c0d1ca25f5b4a5cf1104c728d%40group.calendar.google.com&ctz=Asia%2FTaipei"
           frameborder="0" scrolling="no"></iframe>
       </div>
 
+      <!-- 右：活動清單（免後端互動，存 localStorage） -->
       <div class="events-wrap">
         <div class="toolbar">
           <input id="q" placeholder="搜尋活動（標題/地點）"/>
-          <button id="reloadBtn">重新載入</button>
+          <button id="reloadBtn" type="button">重新載入</button>
         </div>
         <div id="eventsList" class="events"></div>
       </div>
@@ -45,7 +84,7 @@
         <button id="signupSubmit" value="default">送出</button>
       </menu>
     </form>
-    <p id="signupResult" class="result"></p>
+    <p id="signupResult" class="muted"></p>
   </dialog>
 
   <!-- 取消 Modal -->
@@ -59,14 +98,13 @@
         <button id="cancelSubmit" value="default">確認取消</button>
       </menu>
     </form>
-    <p id="cancelResult" class="result"></p>
+    <p id="cancelResult" class="muted"></p>
   </dialog>
 
-  <!-- 幹部後台（簡易） -->
+  <!-- 幹部後台（本機） -->
   <dialog id="adminDlg">
     <form method="dialog" id="adminForm">
-      <h3>幹部管理（新增/修改/刪除活動）</h3>
-      <label>管理密鑰 <input name="admin_key" type="password" required></label>
+      <h3>幹部管理（本機預覽）</h3>
       <label>動作
         <select name="action" required>
           <option value="create_event">新增活動</option>
@@ -74,28 +112,110 @@
           <option value="delete_event">刪除活動(軟刪除)</option>
         </select>
       </label>
-      <label>活動ID（修改/刪除必填）<input name="id"></label>
-      <label>標題 <input name="title"></label>
+      <label>活動ID（修改/刪除必填）<input name="id" placeholder="E_xxx"></label>
+      <label>標題 <input name="title" placeholder="例如：夜間值勤演練"></label>
       <label>日期 <input name="date" type="date"></label>
       <label>開始時間 <input name="start_time" type="time"></label>
       <label>結束時間 <input name="end_time" type="time"></label>
-      <label>地點 <input name="location"></label>
-      <label>說明 <input name="description"></label>
-      <label>相簿嵌入連結 <input name="album_url" placeholder="Google Photos/Drive/Imgur 等分享連結"></label>
+      <label>地點 <input name="location" placeholder="分隊/操場/會議室"></label>
+      <label>說明 <textarea name="description" rows="3" placeholder="必要裝備、服裝…"></textarea></label>
+      <label>相簿嵌入連結 <input name="album_url" placeholder="Google Photos/Drive/Imgur 等嵌入連結"></label>
       <label>上架（true/false）<input name="is_active" placeholder="true"></label>
       <menu>
         <button value="cancel">關閉</button>
         <button id="adminSubmit" value="default">送出</button>
       </menu>
     </form>
-    <p class="muted">提醒：新增活動時會自動產生 ID；若已設定 CALENDAR_ID，系統會建立日曆事件。</p>
-    <p id="adminResult" class="result"></p>
+    <p class="muted">＊此版本僅存於本機瀏覽器（localStorage）。</p>
+    <p id="adminResult" class="muted"></p>
   </dialog>
 
   <footer class="foot">
-    <small>Made for EMT volunteers • 單頁式 • 免登入報名</small>
+    <small>免後端互動版 • 單頁式 • 你的裝置會記住報名與取消</small>
   </footer>
 
-  <script src="app.js"></script>
-</body>
-</html>
+  <script>
+    // ---- 初始資料（可自行改）----
+    const demoAlbum = "https://drive.google.com/embeddedfolderview?id=1kiTnPZNlvPM_L9H6KlDd_UDEz6miryg3#grid";
+    const DEFAULT_EVENTS = [
+      { id:'E_20250919', title:'增能自主訓練暨烤肉', date:'2025-09-19', start_time:'18:00', end_time:'21:00', location:'後龍分隊', description:'1. 自主訓練\\n2. 中秋節烤肉\\n3. 客消學員聯誼\\n4. 支援本次活動', album_url: demoAlbum, is_active:true, signed_count:0 }
+    ];
+
+    // ---- 狀態（localStorage）----
+    const state = { events: loadEvents(), mySignups: loadSignups() };
+
+    // UI 綁定
+    document.getElementById('openAdmin').onclick = ()=>document.getElementById('adminDlg').showModal();
+    document.getElementById('reloadBtn').onclick = render;
+    document.getElementById('q').addEventListener('input', render);
+    document.getElementById('signupForm').addEventListener('submit', onSignupSubmit);
+    document.getElementById('cancelForm').addEventListener('submit', onCancelSubmit);
+    document.getElementById('adminForm').addEventListener('submit', onAdminSubmit);
+
+    // 初始渲染
+    render();
+
+    function render(){
+      const q = (document.getElementById('q').value||'').trim().toLowerCase();
+      const list = document.getElementById('eventsList');
+      list.innerHTML = '';
+      const filtered = state.events.filter(e => e.is_active!==false)
+        .filter(e => !q || (e.title+ ' '+ e.location + ' '+ e.description).toLowerCase().includes(q));
+      if (!filtered.length){ list.innerHTML = '<p class="muted">目前沒有活動。</p>'; return; }
+      for (const ev of filtered){
+        const mine = state.mySignups[ev.id];
+        const timeStr = [formatDate(ev.date), timeRange(ev)].filter(Boolean).join(' ');
+        const card = document.createElement('div'); card.className='event';
+        card.innerHTML = `
+          <h3>${esc(ev.title)}</h3>
+          <div class="meta">
+            <span class="chip">🗓️ ${timeStr}</span>
+            ${ev.location? `<span class="chip">📍 ${esc(ev.location)}</span>`:''}
+            <span class="chip">👥 已報 ${ev.signed_count||0} 人</span>
+          </div>
+          ${ev.description? `<p style="white-space:pre-line">${esc(ev.description)}</p>`:''}
+          <div class="actions">
+            ${mine
+              ? <button class="ghost" data-act="open-cancel" data-id="${ev.id}">取消報名（已報 ${mine.count} 人）</button>
+              : `<button class="primary" data-act="open-signup" data-id="${ev.id}">我要參加</button>`}
+            ${ev.album_url? `<button class="secondary" data-act="toggle-album" data-id="${ev.id}">相簿/現場</button>`:''}
+          </div>
+          ${ev.album_url? `<div class="album" id="album-${ev.id}" style="display:none"><iframe src="${ev.album_url}"></iframe></div>`:''}
+          <p class="muted">活動ID：${ev.id}</p>
+        `;
+        card.addEventListener('click', onCardAction);
+        list.appendChild(card);
+      }
+    }
+
+    function onCardAction(e){
+      const btn = e.target.closest('[data-act]');
+      if(!btn) return;
+      const act = btn.dataset.act, id = btn.dataset.id;
+      const ev = state.events.find(x=>x.id===id);
+      if(!ev) return;
+      if(act==='toggle-album'){
+        const el = document.getElementById('album-'+id);
+        el.style.display = (el.style.display==='none'||!el.style.display)?'block':'none';
+      }
+      if(act==='open-signup') openSignup(ev);
+      if(act==='open-cancel') openCancel(ev);
+    }
+
+    // 報名/取消
+    let currentEvent = null;
+    function openSignup(ev){
+      currentEvent = ev;
+      document.getElementById('signupEventTitle').textContent = `${ev.title}（${formatDate(ev.date)}）`;
+      document.getElementById('signupResult').textContent = '';
+      document.getElementById('signupForm').reset();
+      document.getElementById('signupDlg').showModal();
+    }
+    function onSignupSubmit(e){
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.currentTarget));
+      const n = Math.max(1, Number(data.count||1));
+      // 存我的報名
+      state.mySignups[currentEvent.id] = { division:data.division, name:data.name, count:n, when: Date.now() };
+      saveSignups(state.mySignups);
+      // 更新總人
